@@ -1,0 +1,46 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // User Profile
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+      
+      // Transactions Subcollection
+      match /transactions/{transactionId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      // Budgets Subcollection
+      match /budgets/{budgetId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Settings Subcollection
+      match /settings/{settingId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      // Split Expenses Subcollection (complex rules would be needed for sharing)
+      match /splits/{splitId} {
+        // Simplified for demo: only owner can read/write
+        // Real implementation would verify if user's ID is in the split's 'participants' array
+        allow read, write: if isOwner(userId); 
+      }
+    }
+    
+    // Global App Config (read-only for all authenticated users)
+    match /app_config/{document=**} {
+      allow read: if isAuthenticated();
+      allow write: if false; // Only admin SDK can write
+    }
+  }
+}
