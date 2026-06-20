@@ -1,0 +1,24 @@
+{
+  "name": "expense-tracker-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Investor-grade expense tracker — React Native (Expo) + Firebase + Next.js Admin",
+  "workspaces": [
+    "packages/shared",
+    "apps/mobile",
+    "apps/admin",
+    "apps/functions"
+  ],
+  "scripts": {
+    "mobile": "npm run --workspace=apps/mobile",
+    "admin": "npm run --workspace=apps/admin",
+    "functions": "npm run --workspace=apps/functions",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "clean": "rm -rf node_modules apps/*/node_modules packages/*/node_modules"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

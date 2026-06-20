@@ -1,0 +1,73 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Expo
+.expo/
+dist/
+web-build/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+
+# Native
+ios/Pods/
+android/.gradle/
+android/app/build/
+android/build/
+*.hprof
+
+# Environment
+.env
+.env.local
+.env.development
+.env.staging
+.env.production
+!.env.example
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+*.log
+
+# Testing
+coverage/
+.jest/
+
+# Build
+build/
+out/
+*.tsbuildinfo
+
+# Firebase
+.firebase/
+firebase-debug.log
+firebase-debug.*.log
+ui-debug.log
+firestore-debug.log
+pubsub-debug.log
+database-debug.log
+storage-debug.log
+
+# Sentry
+.sentryclirc
+
+# EAS
+.easignore
+
+# Secrets — NEVER commit these
+google-services.json
+GoogleService-Info.plist
+serviceAccountKey.json
+*.secret
