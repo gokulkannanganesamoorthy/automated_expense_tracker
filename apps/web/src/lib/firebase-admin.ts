@@ -20,7 +20,7 @@ export function initFirebaseAdmin() {
 
   try {
     const serviceAccountPath = process.env.FIREBASE_ADMIN_SERVICE_ACCOUNT_PATH || './serviceAccountKey.json';
-    const absolutePath = path.resolve(process.cwd(), serviceAccountPath);
+    const absolutePath = path.resolve(/*turbopackIgnore: true*/ process.cwd(), serviceAccountPath);
     
     let credential;
 
