@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     ...typography.h2,
     color: colors.textPrimary,
-    marginBottom: spacing.2xl,
+    marginBottom: spacing['2xl'],
   },
   inputGroup: {
     marginBottom: spacing.xl,

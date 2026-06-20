@@ -93,11 +93,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   scrollContent: {
-    paddingBottom: spacing.3xl,
+    paddingBottom: spacing['3xl'],
   },
   budgetSection: {
     alignItems: 'center',
-    paddingVertical: spacing.2xl,
+    paddingVertical: spacing['2xl'],
     backgroundColor: colors.surface,
     marginBottom: spacing.md,
   },

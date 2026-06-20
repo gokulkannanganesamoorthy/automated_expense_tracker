@@ -2,39 +2,49 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
-import type { RootStackParamList, DEEP_LINK_CONFIG } from './types';
+import { View, Text, StyleSheet } from 'react-native';
+import type { RootStackParamList } from './types';
 import { TabNavigator } from './TabNavigator';
 import { colors } from '../theme/tokens';
 
+const PlaceholderScreen = ({ route }: any) => (
+  <View style={styles.placeholder}><Text style={styles.placeholderText}>{route.name} (Coming Soon)</Text></View>
+);
+
+const styles = StyleSheet.create({
+  placeholder: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background },
+  placeholderText: { color: colors.textPrimary, fontSize: 18 }
+});
+
 // Auth Screens
-import { LoginScreen } from '../screens/Auth/LoginScreen';
-import { SignUpScreen } from '../screens/Auth/SignUpScreen';
-import { PhoneOTPScreen } from '../screens/Auth/PhoneOTPScreen';
-import { BiometricLockScreen } from '../screens/Auth/BiometricLockScreen';
-import { PINScreen } from '../screens/Auth/PINScreen';
+const LoginScreen = PlaceholderScreen;
+const SignUpScreen = PlaceholderScreen;
+const PhoneOTPScreen = PlaceholderScreen;
+const BiometricLockScreen = PlaceholderScreen;
+const PINScreen = PlaceholderScreen;
 
 // Onboarding
-import { OnboardingNavigator } from './OnboardingNavigator';
+const OnboardingNavigator = PlaceholderScreen;
 
 // Modal Screens
 import { TransactionDetailScreen } from '../screens/Transactions/TransactionDetailScreen';
 import { ManualEntryScreen } from '../screens/Transactions/ManualEntryScreen';
-import { DeleteAccountScreen } from '../screens/Settings/DeleteAccountScreen';
-import { ProfileScreen } from '../screens/Settings/ProfileScreen';
-import { SecuritySettingsScreen } from '../screens/Settings/SecuritySettingsScreen';
-import { NotificationPrefsScreen } from '../screens/Settings/NotificationPrefsScreen';
+const DeleteAccountScreen = PlaceholderScreen;
+const ProfileScreen = PlaceholderScreen;
+const SecuritySettingsScreen = PlaceholderScreen;
+const NotificationPrefsScreen = PlaceholderScreen;
 import { ExportScreen } from '../screens/Settings/ExportScreen';
-import { ReviewItemScreen } from '../screens/Review/ReviewItemScreen';
-import { CreateSplitScreen } from '../screens/Split/CreateSplitScreen';
-import { SplitDetailScreen } from '../screens/Split/SplitDetailScreen';
+const ReviewItemScreen = PlaceholderScreen;
+import { CreateSplitScreen } from '../screens/Splits/CreateSplitScreen';
+import { SplitDetailScreen } from '../screens/Splits/SplitDetailScreen';
 import { BudgetSetupScreen } from '../screens/Budgets/BudgetSetupScreen';
-import { SavingsGoalScreen } from '../screens/Budgets/SavingsGoalScreen';
+const SavingsGoalScreen = PlaceholderScreen;
 import { CategoryDrilldownScreen } from '../screens/Analytics/CategoryDrilldownScreen';
-import { PaywallScreen } from '../screens/Paywall/PaywallScreen';
-import { PrivacyPolicyScreen } from '../screens/Settings/PrivacyPolicyScreen';
-import { TermsScreen } from '../screens/Settings/TermsScreen';
-import { AboutScreen } from '../screens/Settings/AboutScreen';
-import { ImportDataScreen } from '../screens/Settings/ImportDataScreen';
+const PaywallScreen = PlaceholderScreen;
+const PrivacyPolicyScreen = PlaceholderScreen;
+const TermsScreen = PlaceholderScreen;
+const AboutScreen = PlaceholderScreen;
+const ImportDataScreen = PlaceholderScreen;
 
 // Hooks
 import { useAuthStore } from '../stores/auth-store';

@@ -73,7 +73,7 @@ const styles = StyleSheet.create({
   },
   profileSection: {
     alignItems: 'center',
-    marginBottom: spacing.3xl,
+    marginBottom: spacing['3xl'],
     marginTop: spacing.xl,
   },
   avatar: {

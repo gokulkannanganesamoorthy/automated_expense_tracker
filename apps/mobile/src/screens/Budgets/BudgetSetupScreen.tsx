@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: spacing.xl,
-    paddingBottom: spacing.3xl,
+    paddingBottom: spacing['3xl'],
   },
   title: {
     ...typography.h2,
@@ -99,10 +99,10 @@ const styles = StyleSheet.create({
   subtitle: {
     ...typography.bodyMedium,
     color: colors.textSecondary,
-    marginBottom: spacing.2xl,
+    marginBottom: spacing['2xl'],
   },
   section: {
-    marginBottom: spacing.2xl,
+    marginBottom: spacing['2xl'],
   },
   sectionTitle: {
     ...typography.h3,

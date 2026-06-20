@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: spacing.xl,
-    paddingBottom: spacing.3xl,
+    paddingBottom: spacing['3xl'],
   },
   title: {
     ...typography.h1,
@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xl,
   },
   section: {
-    marginBottom: spacing.2xl,
+    marginBottom: spacing['2xl'],
   },
   sectionTitle: {
     ...typography.labelMedium,

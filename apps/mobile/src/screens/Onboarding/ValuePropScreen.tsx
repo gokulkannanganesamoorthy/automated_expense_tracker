@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
     width,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: spacing.2xl,
+    padding: spacing['2xl'],
   },
   iconContainer: {
     width: 120,
@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceHover,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.2xl,
+    marginBottom: spacing['2xl'],
   },
   icon: {
     fontSize: 60,
@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   footer: {
-    padding: spacing.2xl,
+    padding: spacing['2xl'],
     paddingBottom: 48,
   },
   pagination: {

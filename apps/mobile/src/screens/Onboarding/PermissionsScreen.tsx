@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-    padding: spacing.2xl,
+    padding: spacing['2xl'],
   },
   content: {
     flex: 1,
@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary + '15',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.2xl,
+    marginBottom: spacing['2xl'],
   },
   icon: {
     fontSize: 48,
@@ -132,7 +132,7 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 24,
-    marginBottom: spacing.2xl,
+    marginBottom: spacing['2xl'],
   },
   privacyCard: {
     flexDirection: 'row',

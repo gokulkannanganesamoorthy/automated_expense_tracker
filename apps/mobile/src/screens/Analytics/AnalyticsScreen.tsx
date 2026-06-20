@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: spacing.lg,
-    paddingBottom: spacing.3xl,
+    paddingBottom: spacing['3xl'],
   },
   title: {
     ...typography.h1,

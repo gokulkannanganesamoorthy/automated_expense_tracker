@@ -52,7 +52,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   android: {
     package: getBundleId(),
     adaptiveIcon: {
-      foregroundImage: './assets/adaptive-icon.png',
+      foregroundImage: './assets/android-icon-foreground.png',
       backgroundColor: '#0A0A0F',
     },
     permissions: [
@@ -86,7 +86,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     'expo-secure-store',
     'expo-local-authentication',
     'expo-notifications',
-    'expo-sqlite',
     [
       'expo-updates',
       {

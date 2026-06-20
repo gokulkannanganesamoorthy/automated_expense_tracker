@@ -94,7 +94,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingHorizontal: spacing.md,
-    paddingBottom: spacing.3xl,
+    paddingBottom: spacing['3xl'],
   },
   header: {
     paddingVertical: spacing.lg,

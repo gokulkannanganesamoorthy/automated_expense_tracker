@@ -107,10 +107,10 @@ const styles = StyleSheet.create({
   },
   sheet: {
     backgroundColor: colors.surface,
-    borderTopLeftRadius: radius.2xl,
-    borderTopRightRadius: radius.2xl,
+    borderTopLeftRadius: radius['2xl'],
+    borderTopRightRadius: radius['2xl'],
     padding: spacing.xl,
-    paddingBottom: spacing.2xl,
+    paddingBottom: spacing['2xl'],
     ...shadows.xl,
   },
   handle: {

@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceHover,
     borderRadius: radius.full,
     padding: 4,
-    marginBottom: spacing.2xl,
+    marginBottom: spacing['2xl'],
   },
   typeButton: {
     flex: 1,
@@ -165,7 +165,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.2xl,
+    marginBottom: spacing['2xl'],
   },
   currencySymbol: {
     ...typography.h1,

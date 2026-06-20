@@ -97,12 +97,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-    padding: spacing.2xl,
+    padding: spacing['2xl'],
     justifyContent: 'space-between',
   },
   header: {
     alignItems: 'center',
-    marginTop: spacing.3xl,
+    marginTop: spacing['3xl'],
   },
   logoPlaceholder: {
     width: 80,

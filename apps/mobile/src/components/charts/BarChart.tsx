@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react';
 import { View, StyleSheet, Text } from 'react-native';
 import { Canvas, Path, Skia } from '@shopify/react-native-skia';
-import { colors, radius, spacing } from '../theme/tokens';
-import { typography } from '../theme/typography';
+import { colors, radius, spacing } from '../../theme/tokens';
+import { typography } from '../../theme/typography';
 
 interface DataPoint {
   label: string;

@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    paddingVertical: spacing.2xl,
+    paddingVertical: spacing['2xl'],
     backgroundColor: colors.surface,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
@@ -95,6 +95,6 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingHorizontal: spacing.md,
-    paddingBottom: spacing.3xl,
+    paddingBottom: spacing['3xl'],
   },
 });

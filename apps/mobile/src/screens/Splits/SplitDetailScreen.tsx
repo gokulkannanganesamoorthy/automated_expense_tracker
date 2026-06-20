@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    marginBottom: spacing.2xl,
+    marginBottom: spacing['2xl'],
   },
   title: {
     ...typography.h2,
@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceHover,
     padding: spacing.lg,
     borderRadius: radius.lg,
-    marginBottom: spacing.2xl,
+    marginBottom: spacing['2xl'],
     gap: spacing.md,
   },
   statusIcon: {

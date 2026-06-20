@@ -96,12 +96,12 @@ const styles = StyleSheet.create({
   subtitle: {
     ...typography.bodyMedium,
     color: colors.textSecondary,
-    marginBottom: spacing.2xl,
+    marginBottom: spacing['2xl'],
   },
   typeSelector: {
     flexDirection: 'row',
     gap: spacing.md,
-    marginBottom: spacing.3xl,
+    marginBottom: spacing['3xl'],
   },
   typeButton: {
     flex: 1,

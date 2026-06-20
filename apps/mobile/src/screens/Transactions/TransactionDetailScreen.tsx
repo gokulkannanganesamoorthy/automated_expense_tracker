@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    marginBottom: spacing.2xl,
+    marginBottom: spacing['2xl'],
     paddingTop: spacing.xl,
   },
   merchant: {

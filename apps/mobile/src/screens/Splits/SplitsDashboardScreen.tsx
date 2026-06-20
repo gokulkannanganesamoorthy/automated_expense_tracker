@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingHorizontal: spacing.xl,
-    paddingBottom: spacing.3xl,
+    paddingBottom: spacing['3xl'],
   },
   splitCard: {
     flexDirection: 'row',

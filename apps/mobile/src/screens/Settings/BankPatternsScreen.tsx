@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: spacing.xl,
-    paddingBottom: spacing.3xl,
+    paddingBottom: spacing['3xl'],
   },
   header: {
     flexDirection: 'row',
@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     padding: spacing.lg,
     borderRadius: radius.md,
-    marginBottom: spacing.2xl,
+    marginBottom: spacing['2xl'],
   },
   statusLabel: {
     ...typography.labelSmall,
