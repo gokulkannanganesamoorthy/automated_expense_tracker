@@ -8,6 +8,7 @@ import { TransactionCard } from '../../components/TransactionCard';
 import { EmptyState } from '../../components/EmptyState';
 import { useTransactionStore } from '../../stores/transaction-store';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../../navigation/types';
 
@@ -15,6 +16,7 @@ type FilterType = 'all' | 'debit' | 'credit';
 
 export function TransactionsScreen(): React.ReactElement {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const insets = useSafeAreaInsets();
   const { transactions, isLoading } = useTransactionStore();
   const [filter, setFilter] = useState<FilterType>('all');
 
@@ -83,7 +85,7 @@ export function TransactionsScreen(): React.ReactElement {
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: Math.max(insets.top, spacing.md) }]}>
       <FlashList
         data={filteredTransactions}
         keyExtractor={(item) => item.id}

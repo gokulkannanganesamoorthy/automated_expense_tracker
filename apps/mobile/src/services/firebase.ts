@@ -1,6 +1,6 @@
 import { initializeApp, getApp, getApps } from 'firebase/app';
 import { getAuth, initializeAuth, getReactNativePersistence } from 'firebase/auth';
-import { getFirestore, initializeFirestore, persistentLocalCache } from 'firebase/firestore';
+import { getFirestore, initializeFirestore, memoryLocalCache } from 'firebase/firestore';
 import { getRemoteConfig, fetchAndActivate, getAll } from 'firebase/remote-config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
@@ -26,7 +26,7 @@ if (!getApps().length) {
     persistence: getReactNativePersistence(AsyncStorage)
   });
   db = initializeFirestore(app, {
-    localCache: persistentLocalCache()
+    localCache: memoryLocalCache()
   });
 } else {
   app = getApp();
@@ -41,7 +41,7 @@ if (!getApps().length) {
     db = getFirestore(app);
   } catch (e) {
     db = initializeFirestore(app, {
-      localCache: persistentLocalCache()
+      localCache: memoryLocalCache()
     });
   }
 }

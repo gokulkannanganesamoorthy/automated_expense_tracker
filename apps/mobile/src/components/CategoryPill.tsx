@@ -2,7 +2,8 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { colors, radius, spacing } from '../theme/tokens';
 import { typography } from '../theme/typography';
-import { CATEGORY_ICONS, CATEGORY_COLORS, CATEGORY_NAMES } from '@expense-tracker/shared';
+import { CATEGORY_COLORS, CATEGORY_NAMES } from '@expense-tracker/shared';
+import { ShoppingCart, Utensils, Car, Film, Receipt, HeartPulse, MoreHorizontal } from 'lucide-react-native';
 
 interface CategoryPillProps {
   categoryId: string;
@@ -11,9 +12,20 @@ interface CategoryPillProps {
 }
 
 export function CategoryPill({ categoryId, size = 'md', showLabel = true }: CategoryPillProps): React.ReactElement {
-  const icon = CATEGORY_ICONS[categoryId] || '🏷️';
   const name = CATEGORY_NAMES[categoryId] || 'Other';
   const color = CATEGORY_COLORS[categoryId] || colors.accentPrimary;
+
+  const IconComponent = (() => {
+    switch (categoryId) {
+      case 'food': return Utensils;
+      case 'transport': return Car;
+      case 'shopping': return ShoppingCart;
+      case 'entertainment': return Film;
+      case 'bills': return Receipt;
+      case 'health': return HeartPulse;
+      default: return MoreHorizontal;
+    }
+  })();
 
   const getContainerStyle = () => {
     switch (size) {
@@ -24,12 +36,12 @@ export function CategoryPill({ categoryId, size = 'md', showLabel = true }: Cate
     }
   };
 
-  const getIconStyle = () => {
+  const getIconSize = () => {
     switch (size) {
-      case 'sm': return styles.iconSm;
-      case 'lg': return styles.iconLg;
+      case 'sm': return 12;
+      case 'lg': return 24;
       case 'md':
-      default: return styles.iconMd;
+      default: return 16;
     }
   };
 
@@ -45,7 +57,7 @@ export function CategoryPill({ categoryId, size = 'md', showLabel = true }: Cate
   return (
     <View style={styles.wrapper}>
       <View style={[styles.container, getContainerStyle(), { backgroundColor: `${color}20` }]}>
-        <Text style={getIconStyle()}>{icon}</Text>
+        <IconComponent size={getIconSize()} color={color} strokeWidth={2.5} />
       </View>
       {showLabel && (
         <Text style={[styles.label, getLabelStyle(), { color }]} numberOfLines={1}>
@@ -78,15 +90,6 @@ const styles = StyleSheet.create({
   containerLg: {
     width: 48,
     height: 48,
-  },
-  iconSm: {
-    fontSize: 12,
-  },
-  iconMd: {
-    fontSize: 16,
-  },
-  iconLg: {
-    fontSize: 24,
   },
   label: {
     fontWeight: '500',

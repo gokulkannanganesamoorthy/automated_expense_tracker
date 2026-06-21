@@ -3,13 +3,16 @@ import { View, Text, StyleSheet, ScrollView, Pressable, Switch } from 'react-nat
 import { colors, radius, spacing } from '../../theme/tokens';
 import { typography } from '../../theme/typography';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ConfirmationSheet } from '../../components/ConfirmationSheet';
 import * as LocalAuthentication from 'expo-local-authentication';
+import { User, Cloud, Download, Lock, Moon, Building } from 'lucide-react-native';
 import { useAuthStore } from '../../stores/auth-store';
 import { authService } from '../../services/auth';
 
 export function SettingsScreen(): React.ReactElement {
   const navigation = useNavigation<any>();
+  const insets = useSafeAreaInsets();
   const { settings, updateSettings, logout } = useAuthStore();
   
   const biometricsEnabled = settings?.biometricEnabled || false;
@@ -49,19 +52,19 @@ export function SettingsScreen(): React.ReactElement {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: Math.max(insets.top, spacing.md) }]}>
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.title}>Settings</Text>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Account & Data</Text>
           <SettingsRow 
-            icon="👤" 
+            icon={<User size={20} color={colors.textSecondary} />} 
             label="Account Details" 
             onPress={() => navigation.navigate('Profile')} 
           />
           <SettingsRow 
-            icon="☁️" 
+            icon={<Cloud size={20} color={colors.textSecondary} />} 
             label="Cloud Sync" 
             rightContent={
               <Switch 
@@ -72,7 +75,7 @@ export function SettingsScreen(): React.ReactElement {
             } 
           />
           <SettingsRow 
-            icon="📤" 
+            icon={<Download size={20} color={colors.textSecondary} />} 
             label="Export Data (CSV/PDF)" 
             onPress={() => navigation.navigate('ExportOptions')} 
           />
@@ -81,7 +84,7 @@ export function SettingsScreen(): React.ReactElement {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>App Preferences</Text>
           <SettingsRow 
-            icon="🔐" 
+            icon={<Lock size={20} color={colors.textSecondary} />} 
             label="App Lock (Biometrics)" 
             rightContent={
               <Switch 
@@ -92,7 +95,7 @@ export function SettingsScreen(): React.ReactElement {
             } 
           />
           <SettingsRow 
-            icon="🌙" 
+            icon={<Moon size={20} color={colors.textSecondary} />} 
             label="Dark Mode" 
             rightContent={
               <Switch 
@@ -107,7 +110,7 @@ export function SettingsScreen(): React.ReactElement {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Advanced</Text>
           <SettingsRow 
-            icon="🏦" 
+            icon={<Building size={20} color={colors.textSecondary} />} 
             label="Bank SMS Patterns" 
             onPress={() => navigation.navigate('BankPatterns')} 
           />
@@ -140,7 +143,7 @@ const SettingsRow = ({
   onPress, 
   rightContent 
 }: { 
-  icon: string; 
+  icon: React.ReactNode; 
   label: string; 
   onPress?: () => void;
   rightContent?: React.ReactNode;
@@ -150,7 +153,7 @@ const SettingsRow = ({
   return (
     <Container style={styles.row} onPress={onPress}>
       <View style={styles.rowLeft}>
-        <Text style={styles.rowIcon}>{icon}</Text>
+        <View style={styles.rowIconContainer}>{icon}</View>
         <Text style={styles.rowLabel}>{label}</Text>
       </View>
       <View style={styles.rowRight}>
@@ -197,8 +200,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.md,
   },
-  rowIcon: {
-    fontSize: 20,
+  rowIconContainer: {
+    width: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   rowLabel: {
     ...typography.bodyLarge,

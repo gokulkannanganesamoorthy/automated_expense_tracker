@@ -31,7 +31,11 @@ export async function initializeSmsListener(): Promise<void> {
     const body = notification.request.content.body;
 
     if (body) {
-      console.log('[SMS Listener] Intercepted notification:', title);
+      console.log('=========================================');
+      console.log('[SMS Interceptor] New Notification Received');
+      console.log('[SMS Interceptor] Title/Sender:', title);
+      console.log('[SMS Interceptor] Body:', body);
+      console.log('=========================================');
       const incomingSms: IncomingSms = {
         sender: title || 'Unknown',
         body: body,
@@ -41,16 +45,19 @@ export async function initializeSmsListener(): Promise<void> {
       const result = await parseSms(incomingSms);
 
       if (result.status === 'success' && result.transaction) {
+        console.log('[SMS Interceptor] ✅ Successfully parsed transaction:', result.transaction.id);
         // Automatically save to database
         await transactionRepo.insert(result.transaction);
 
         // Update Zustand store
         useTransactionStore.getState().addTransaction(result.transaction);
       } else if (result.status === 'review') {
+        console.log('[SMS Interceptor] ⚠️ Requires review, adding to queue.');
         // Increment review queue counter in store
         const currentCount = useTransactionStore.getState().reviewQueueCount;
         useTransactionStore.getState().setReviewQueueCount(currentCount + 1);
-        console.log('[SMS Listener] Transaction sent to review queue.');
+      } else {
+        console.log('[SMS Interceptor] ❌ Could not parse SMS into a transaction.');
       }
     }
   });

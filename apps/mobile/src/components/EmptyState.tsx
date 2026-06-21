@@ -3,22 +3,26 @@ import { View, Text, StyleSheet } from 'react-native';
 import { colors, spacing } from '../theme/tokens';
 import { typography } from '../theme/typography';
 
+import { Inbox } from 'lucide-react-native';
+
 interface EmptyStateProps {
-  icon?: string;
+  icon?: React.ReactNode;
   title: string;
   description?: string;
   action?: React.ReactNode;
 }
 
 export function EmptyState({
-  icon = '📭',
+  icon,
   title,
   description,
   action,
 }: EmptyStateProps): React.ReactElement {
   return (
     <View style={styles.container}>
-      <Text style={styles.icon}>{icon}</Text>
+      <View style={styles.iconContainer}>
+        {icon || <Inbox size={48} color={colors.textMuted} strokeWidth={1.5} />}
+      </View>
       <Text style={styles.title}>{title}</Text>
       {description && <Text style={styles.description}>{description}</Text>}
       {action && <View style={styles.actionContainer}>{action}</View>}
@@ -34,9 +38,10 @@ const styles = StyleSheet.create({
     padding: spacing.xl,
     minHeight: 200,
   },
-  icon: {
-    fontSize: 48,
+  iconContainer: {
     marginBottom: spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   title: {
     ...typography.h3,

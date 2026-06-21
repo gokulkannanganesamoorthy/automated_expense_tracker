@@ -13,6 +13,7 @@ import { typography } from '../../theme/typography';
 import { BudgetRing } from '../../components/BudgetRing';
 import { CategoryPill } from '../../components/CategoryPill';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../../navigation/types';
 import { useTransactionStore } from '../../stores/transaction-store';
@@ -61,6 +62,7 @@ function AnimatedProgressBar({
 
 export function BudgetsScreen(): React.ReactElement {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const insets = useSafeAreaInsets();
   const { transactions } = useTransactionStore();
   const { settings } = useAuthStore();
 
@@ -88,7 +90,7 @@ export function BudgetsScreen(): React.ReactElement {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: Math.max(insets.top, spacing.md) }]}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         
         <Animated.View entering={FadeInDown.duration(500)}>

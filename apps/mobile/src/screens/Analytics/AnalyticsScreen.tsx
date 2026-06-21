@@ -6,6 +6,7 @@ import { typography } from '../../theme/typography';
 import { BarChart, DonutChart } from '../../components/charts';
 import { useTransactionStore } from '../../stores/transaction-store';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../../navigation/types';
 import { CATEGORY_COLORS, CATEGORY_NAMES } from '@expense-tracker/shared';
@@ -14,6 +15,7 @@ type TimeRange = 'week' | 'month' | 'year';
 
 export function AnalyticsScreen(): React.ReactElement {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const insets = useSafeAreaInsets();
   const { transactions } = useTransactionStore();
   const [range, setRange] = useState<TimeRange>('month');
 
@@ -72,7 +74,7 @@ export function AnalyticsScreen(): React.ReactElement {
   const hasData = transactions.length > 0;
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+    <ScrollView style={[styles.container, { paddingTop: Math.max(insets.top, spacing.md) }]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
       <Animated.View entering={FadeInDown.duration(500)}>
         <Text style={styles.title}>Analytics</Text>
         <Text style={styles.subtitle}>Understand where your money goes</Text>

@@ -4,20 +4,17 @@ import { colors, radius, spacing } from '../../theme/tokens';
 import { typography } from '../../theme/typography';
 import { useNavigation } from '@react-navigation/native';
 import { EmptyState } from '../../components/EmptyState';
+import { Users } from 'lucide-react-native';
 
 export function SplitsDashboardScreen(): React.ReactElement {
   const navigation = useNavigation<any>();
   const [activeTab, setActiveTab] = useState<'you_owe' | 'owed_to_you'>('owed_to_you');
 
-  // Mock data
-  const youOweTotal = 150000; // 1,500
-  const owedToYouTotal = 450000; // 4,500
+  // Mock data removed as per request
+  const youOweTotal = 0;
+  const owedToYouTotal = 0;
 
-  const mockSplits = [
-    { id: '1', title: 'Dinner at Rajdhani', amount: 150000, date: 'Yesterday', type: 'owed_to_you', users: ['Alice', 'Bob'] },
-    { id: '2', title: 'Movie Tickets', amount: 300000, date: '2 days ago', type: 'owed_to_you', users: ['Charlie'] },
-    { id: '3', title: 'Cab to Airport', amount: 150000, date: 'Last week', type: 'you_owe', users: ['Alice'] },
-  ];
+  const mockSplits: any[] = [];
 
   const filteredSplits = mockSplits.filter(s => s.type === activeTab);
 
@@ -77,7 +74,7 @@ export function SplitsDashboardScreen(): React.ReactElement {
               onPress={() => navigation.navigate('SplitDetail', { id: split.id })}
             >
               <View style={styles.splitIcon}>
-                <Text>🤝</Text>
+                <Users size={20} color={colors.primary} />
               </View>
               <View style={styles.splitDetails}>
                 <Text style={styles.splitTitle}>{split.title}</Text>

@@ -13,6 +13,7 @@ import { EmptyState } from '../../components/EmptyState';
 import { useTransactionStore } from '../../stores/transaction-store';
 import { useAuthStore } from '../../stores/auth-store';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../../navigation/types';
 
@@ -20,6 +21,7 @@ const { width } = Dimensions.get('window');
 
 export function HomeScreen(): React.ReactElement {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const insets = useSafeAreaInsets();
   
   const { 
     transactions, 
@@ -49,7 +51,7 @@ export function HomeScreen(): React.ReactElement {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: Math.max(insets.top, spacing.md) }]}>
       <SyncStatusBanner status="synced" />
       
       <ScrollView

@@ -134,12 +134,10 @@ export const useTransactionStore = create<TransactionStore>()(
     },
 
     addTransaction: async (transaction) => {
-      // Create a local reference so UI can optimistic update (optional, but handled by snapshot anyway)
-      // We will just push to Firestore directly
       try {
-        const userUid = useAuthStore?.getState()?.user?.uid;
-        if (!userUid) return;
-        const docRef = doc(db, 'users', userUid, 'transactions', transaction.id);
+        const authState = useAuthStore?.getState();
+        if (!authState?.user?.uid || authState.isGuest) return; // Skip Firestore for guests
+        const docRef = doc(db, 'users', authState.user.uid, 'transactions', transaction.id);
         await setDoc(docRef, transaction);
       } catch (e) {
         console.error("Error adding transaction", e);
@@ -148,9 +146,9 @@ export const useTransactionStore = create<TransactionStore>()(
 
     updateTransaction: async (id, updates) => {
       try {
-        const userUid = useAuthStore?.getState()?.user?.uid;
-        if (!userUid) return;
-        const docRef = doc(db, 'users', userUid, 'transactions', id);
+        const authState = useAuthStore?.getState();
+        if (!authState?.user?.uid || authState.isGuest) return;
+        const docRef = doc(db, 'users', authState.user.uid, 'transactions', id);
         await updateDoc(docRef, { ...updates, updatedAt: new Date().toISOString() });
       } catch (e) {
         console.error("Error updating transaction", e);
@@ -159,9 +157,9 @@ export const useTransactionStore = create<TransactionStore>()(
 
     removeTransaction: async (id) => {
       try {
-        const userUid = useAuthStore?.getState()?.user?.uid;
-        if (!userUid) return;
-        const docRef = doc(db, 'users', userUid, 'transactions', id);
+        const authState = useAuthStore?.getState();
+        if (!authState?.user?.uid || authState.isGuest) return;
+        const docRef = doc(db, 'users', authState.user.uid, 'transactions', id);
         await deleteDoc(docRef);
       } catch (e) {
         console.error("Error deleting transaction", e);
@@ -170,9 +168,9 @@ export const useTransactionStore = create<TransactionStore>()(
 
     softDeleteTransaction: async (id) => {
       try {
-        const userUid = useAuthStore?.getState()?.user?.uid;
-        if (!userUid) return;
-        const docRef = doc(db, 'users', userUid, 'transactions', id);
+        const authState = useAuthStore?.getState();
+        if (!authState?.user?.uid || authState.isGuest) return;
+        const docRef = doc(db, 'users', authState.user.uid, 'transactions', id);
         await updateDoc(docRef, { isDeleted: true, updatedAt: new Date().toISOString() });
       } catch (e) {
         console.error("Error soft-deleting transaction", e);
