@@ -9,6 +9,7 @@ import * as LocalAuthentication from 'expo-local-authentication';
 import { User, Cloud, Download, Lock, Moon, Building } from 'lucide-react-native';
 import { useAuthStore } from '../../stores/auth-store';
 import { authService } from '../../services/auth';
+import { GmailSyncButton } from '../../components/GmailSyncButton';
 
 export function SettingsScreen(): React.ReactElement {
   const navigation = useNavigation<any>();
@@ -79,6 +80,16 @@ export function SettingsScreen(): React.ReactElement {
             label="Export Data (CSV/PDF)" 
             onPress={() => navigation.navigate('ExportOptions')} 
           />
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Bank Connections</Text>
+          <View style={{ padding: spacing.lg, backgroundColor: colors.surface, marginHorizontal: spacing.md, borderRadius: radius.xl }}>
+            <Text style={{ ...typography.bodyMedium, color: colors.textSecondary, marginBottom: spacing.md }}>
+              Securely scan your Gmail inbox for bank transaction alerts. 100% Free and Private.
+            </Text>
+            <GmailSyncButton />
+          </View>
         </View>
 
         <View style={styles.section}>

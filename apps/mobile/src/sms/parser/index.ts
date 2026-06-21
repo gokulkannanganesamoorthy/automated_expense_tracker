@@ -244,6 +244,100 @@ export async function parseBulkSms(messages: IncomingSms[]): Promise<{
 }
 
 // ═══════════════════════════════════════════════════════════
+// PASTED TEXT PARSE (iOS Smart Paste)
+// ═══════════════════════════════════════════════════════════
+
+/**
+ * Attempt to parse a raw text string without a sender ID (e.g. pasted from clipboard).
+ * It tests the string against all known bank parsers.
+ */
+export async function parsePastedText(text: string): Promise<ParseResult> {
+  try {
+    if (containsNonLatinChars(text)) {
+      return {
+        status: 'rejected',
+        reason: 'Non-Latin characters detected (Hindi/regional language)',
+      };
+    }
+
+    // Try parsing with each bank configuration
+    for (const bankConfig of BANK_CONFIGS) {
+      const parsed = parseBankSms(bankConfig.id, text, bankConfig.name);
+      
+      if (parsed && parsed.amountPaise > 0) {
+        parsed.merchantNormalized = normalizeMerchant(parsed.merchant);
+        
+        // Use a generic sender for confidence calculation
+        parsed.confidenceScore = calculateConfidence(parsed, 'PASTE', text);
+        
+        const txnDate = parsed.txnTimestamp ?? new Date().toISOString();
+        const hash = generateDedupHash(parsed.amountPaise, parsed.accountLast4, txnDate);
+
+        const isDup = await isDuplicate(hash);
+        if (isDup) {
+          return {
+            status: 'duplicate',
+            reason: 'Transaction already exists',
+            parsedResult: parsed,
+          };
+        }
+
+        const category = classifyCategory(parsed.merchantNormalized, parsed.txnMode, parsed.type);
+        const now = new Date().toISOString();
+
+        const transaction: CreateTransaction = {
+          id: uuidv4(),
+          merchant: parsed.merchant,
+          merchantNormalized: parsed.merchantNormalized,
+          amountPaise: parsed.amountPaise,
+          type: parsed.type,
+          category: category.categoryId,
+          subCategory: category.subCategory,
+          source: 'sms' as TransactionSource,
+          accountLast4: parsed.accountLast4,
+          upiRef: parsed.upiRef,
+          bankName: parsed.bankName,
+          txnMode: parsed.txnMode,
+          originalCurrency: parsed.originalCurrency,
+          originalAmountPaise: parsed.originalAmountPaise,
+          date: txnDate,
+          parsedAt: now,
+          isManual: false,
+          isSplit: false,
+          isRecurring: false,
+          recurringGroupId: null,
+          confidenceScore: parsed.confidenceScore,
+          needsReview: parsed.confidenceScore < 80, // Be slightly stricter for pasted text
+          notes: 'Added via Smart Paste',
+          tags: [],
+          receiptUrl: null,
+          hash,
+          createdAt: now,
+        };
+
+        return {
+          status: 'success',
+          transaction,
+          parsedResult: parsed,
+          confidenceScore: parsed.confidenceScore,
+        };
+      }
+    }
+
+    return {
+      status: 'error',
+      reason: 'Could not detect any transaction data in the pasted text.',
+    };
+  } catch (error) {
+    const err = error as Error;
+    return {
+      status: 'error',
+      reason: `Parser error: ${err.message}`,
+    };
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
 // HELPERS
 // ═══════════════════════════════════════════════════════════
 

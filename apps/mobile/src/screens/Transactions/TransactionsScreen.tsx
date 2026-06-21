@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { View, StyleSheet, Text, Pressable } from 'react-native';
+import { View, StyleSheet, Text, Pressable, Alert } from 'react-native';
 import Animated, { FadeInDown, FadeInRight, Layout } from 'react-native-reanimated';
 import { FlashList } from '@shopify/flash-list';
 import { colors, radius, spacing } from '../../theme/tokens';
@@ -11,13 +11,16 @@ import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../../navigation/types';
+import { ClipboardPaste } from 'lucide-react-native';
+import * as Clipboard from 'expo-clipboard';
+import { parsePastedText } from '../../sms/parser';
 
 type FilterType = 'all' | 'debit' | 'credit';
 
 export function TransactionsScreen(): React.ReactElement {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const insets = useSafeAreaInsets();
-  const { transactions, isLoading } = useTransactionStore();
+  const { transactions, isLoading, addTransaction, setReviewQueueCount, reviewQueueCount } = useTransactionStore();
   const [filter, setFilter] = useState<FilterType>('all');
 
   const filteredTransactions = useMemo(() => {
@@ -43,10 +46,46 @@ export function TransactionsScreen(): React.ReactElement {
     navigation.navigate('TransactionDetail', { transactionId: transaction.id });
   };
 
+  const handlePasteSms = async () => {
+    try {
+      const hasString = await Clipboard.hasStringAsync();
+      if (!hasString) {
+        Alert.alert('Empty Clipboard', 'No text found in clipboard.');
+        return;
+      }
+      
+      const text = await Clipboard.getStringAsync();
+      const result = await parsePastedText(text);
+
+      if (result.status === 'success' && result.transaction) {
+        if (result.transaction.needsReview) {
+          addTransaction(result.transaction as any);
+          setReviewQueueCount(reviewQueueCount + 1);
+          Alert.alert('Needs Review', 'Transaction added to review queue successfully!');
+        } else {
+          addTransaction(result.transaction as any);
+          Alert.alert('Success', 'Transaction parsed and added successfully!');
+        }
+      } else if (result.status === 'duplicate') {
+        Alert.alert('Duplicate', 'This transaction has already been added.');
+      } else {
+        Alert.alert('Unrecognized SMS', result.reason || 'Could not parse a transaction from the pasted text. Ensure you copy the full bank SMS.');
+      }
+    } catch (error: any) {
+      Alert.alert('Error', 'Failed to read clipboard or parse SMS: ' + error.message);
+    }
+  };
+
   const renderHeader = () => (
     <Animated.View entering={FadeInDown.duration(500)}>
       <View style={styles.header}>
-        <Text style={styles.title}>Transactions</Text>
+        <View style={styles.headerTitleRow}>
+          <Text style={styles.title}>Transactions</Text>
+          <Pressable style={styles.pasteButton} onPress={handlePasteSms}>
+            <ClipboardPaste size={18} color={colors.primary} />
+            <Text style={styles.pasteButtonText}>Paste SMS</Text>
+          </Pressable>
+        </View>
         <Text style={styles.subtitle}>
           {filteredTransactions.length} transaction{filteredTransactions.length !== 1 ? 's' : ''}
         </Text>
@@ -86,10 +125,10 @@ export function TransactionsScreen(): React.ReactElement {
 
   return (
     <View style={[styles.container, { paddingTop: Math.max(insets.top, spacing.md) }]}>
-      <FlashList
+      <FlashList<any>
         data={filteredTransactions}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item, index }) => (
+        keyExtractor={(item: any) => item.id}
+        renderItem={({ item, index }: { item: any, index: number }) => (
           <Animated.View entering={FadeInDown.duration(350).delay(Math.min(index * 50, 500))}>
             <TransactionCard 
               transaction={item} 
@@ -144,6 +183,26 @@ const styles = StyleSheet.create({
   header: {
     paddingTop: spacing.xl,
     paddingBottom: spacing.md,
+  },
+  headerTitleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  pasteButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.primary + '15',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.full,
+    gap: spacing.xs,
+  },
+  pasteButtonText: {
+    ...typography.labelMedium,
+    color: colors.primary,
+    fontWeight: '600',
   },
   title: {
     ...typography.h1,

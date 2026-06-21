@@ -32,7 +32,7 @@ export const generateInsights = functions.https.onCall(async (data, context) => 
     throw new functions.https.HttpsError('unauthenticated', 'User must be logged in.');
   }
 
-  // Implementation would aggregate transactions and generate insights
+// Implementation would aggregate transactions and generate insights
   return {
     insights: [
       "You've spent 20% less on dining out this month compared to last month.",
@@ -40,3 +40,6 @@ export const generateInsights = functions.https.onCall(async (data, context) => 
     ]
   };
 });
+
+// Plaid Integration Functions
+export * from './plaid';
