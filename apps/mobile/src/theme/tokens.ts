@@ -67,6 +67,12 @@ export const colors = {
   cardBackground: '#13131F',
   inputBackground: '#1C1C2E',
   badgeBackground: '#7C3AED',
+
+  // Convenience aliases (referenced by 50+ components)
+  primary: '#A78BFA',
+  primaryHover: '#7C3AED',
+  error: '#EF4444',
+  warning: '#F59E0B',
 } as const;
 
 // ═══════════════════════════════════════════════════════════

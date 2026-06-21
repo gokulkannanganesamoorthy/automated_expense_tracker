@@ -1,32 +1,76 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Pressable, Platform, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Platform, ActivityIndicator, TextInput, Alert } from 'react-native';
 import { colors, radius, spacing } from '../../theme/tokens';
 import { typography } from '../../theme/typography';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { RootStackParamList } from '../../navigation/types';
+import type { OnboardingStackParamList } from '../../navigation/types';
+import { authService } from '../../services/auth';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { db } from '../../services/firebase';
 
 export function SignInScreen(): React.ReactElement {
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const navigation = useNavigation<NativeStackNavigationProp<OnboardingStackParamList>>();
   const [loading, setLoading] = useState<string | null>(null);
+  
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showEmailForm, setShowEmailForm] = useState(false);
 
-  const handleSignIn = async (provider: string) => {
-    setLoading(provider);
+  const handleGoogleSignIn = () => {
+    Alert.alert("Notice", "Real Google Sign-In requires Client IDs in the .env file. Please use Email/Password to test real Firebase Auth for now.");
+  };
+
+  const handleEmailAuth = async () => {
+    if (!email || !password) {
+      Alert.alert("Error", "Please enter email and password.");
+      return;
+    }
     
-    // Simulate auth delay
-    setTimeout(() => {
+    setLoading('email');
+    try {
+      // Attempt Sign In first
+      let user;
+      try {
+        user = await authService.signInWithEmail(email, password);
+      } catch (err: any) {
+        if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found') {
+          // Try sign up if not found
+          user = await authService.signUpWithEmail(email, password);
+          
+          // Create initial firestore doc
+          await setDoc(doc(db, 'users', user.uid), {
+            name: email.split('@')[0],
+            email,
+            createdAt: new Date().toISOString(),
+          });
+        } else {
+          throw err;
+        }
+      }
+      
+      // If successful, onAuthStateChanged in App.tsx will handle the rest!
+      // But we still want to navigate to Permissions so they grant notifications.
+      navigation.navigate('Permissions', { provider: 'email' } as any);
+      
+    } catch (err: any) {
+      console.error(err);
+      Alert.alert("Authentication Failed", err.message);
+    } finally {
       setLoading(null);
-      // Navigate to next onboarding step
-      navigation.navigate('Permissions');
-    }, 1000);
+    }
   };
 
   const handleGuest = () => {
-    navigation.navigate('Permissions');
+    navigation.navigate('Permissions', { provider: 'guest' } as any);
   };
 
   return (
     <View style={styles.container}>
+      <Pressable style={styles.backButton} onPress={() => navigation.goBack()}>
+        <Text style={styles.backButtonText}>← Back</Text>
+      </Pressable>
+      
       <View style={styles.header}>
         <View style={styles.logoPlaceholder}>
           <Text style={styles.logoText}>💰</Text>
@@ -52,27 +96,52 @@ export function SignInScreen(): React.ReactElement {
 
         <Pressable 
           style={[styles.button, styles.googleButton]} 
-          onPress={() => handleSignIn('google')}
+          onPress={handleGoogleSignIn}
           disabled={!!loading}
         >
-          {loading === 'google' ? (
-            <ActivityIndicator color={colors.textPrimary} />
-          ) : (
-            <Text style={[styles.buttonText, { color: colors.textPrimary }]}>G Continue with Google</Text>
-          )}
+          <Text style={[styles.buttonText, { color: colors.textPrimary }]}>G Continue with Google</Text>
         </Pressable>
 
-        <Pressable 
-          style={[styles.button, styles.emailButton]} 
-          onPress={() => handleSignIn('email')}
-          disabled={!!loading}
-        >
-          {loading === 'email' ? (
-            <ActivityIndicator color={colors.textPrimary} />
-          ) : (
+        {!showEmailForm ? (
+          <Pressable 
+            style={[styles.button, styles.emailButton]} 
+            onPress={() => setShowEmailForm(true)}
+            disabled={!!loading}
+          >
             <Text style={[styles.buttonText, { color: colors.textPrimary }]}>✉️ Continue with Email</Text>
-          )}
-        </Pressable>
+          </Pressable>
+        ) : (
+          <View style={styles.emailFormContainer}>
+            <TextInput
+              style={styles.input}
+              placeholder="Email address"
+              placeholderTextColor={colors.textMuted}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              value={email}
+              onChangeText={setEmail}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Password"
+              placeholderTextColor={colors.textMuted}
+              secureTextEntry
+              value={password}
+              onChangeText={setPassword}
+            />
+            <Pressable 
+              style={[styles.button, styles.emailSubmitButton]} 
+              onPress={handleEmailAuth}
+              disabled={!!loading}
+            >
+              {loading === 'email' ? (
+                <ActivityIndicator color={colors.textInverse} />
+              ) : (
+                <Text style={[styles.buttonText, { color: colors.textInverse }]}>Sign In / Sign Up</Text>
+              )}
+            </Pressable>
+          </View>
+        )}
       </View>
 
       <View style={styles.footer}>
@@ -98,11 +167,23 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
     padding: spacing['2xl'],
+    paddingTop: spacing['3xl'],
     justifyContent: 'space-between',
+  },
+  backButton: {
+    position: 'absolute',
+    top: spacing['3xl'],
+    left: spacing['xl'],
+    zIndex: 10,
+    padding: spacing.sm,
+  },
+  backButtonText: {
+    ...typography.bodyLarge,
+    color: colors.primary,
   },
   header: {
     alignItems: 'center',
-    marginTop: spacing['3xl'],
+    marginTop: spacing['3xl'] + 20,
   },
   logoPlaceholder: {
     width: 80,
@@ -150,6 +231,24 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
+  },
+  emailSubmitButton: {
+    backgroundColor: colors.primary,
+    marginTop: spacing.sm,
+  },
+  emailFormContainer: {
+    gap: spacing.sm,
+    marginTop: spacing.sm,
+  },
+  input: {
+    height: 56,
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.lg,
+    color: colors.textPrimary,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...typography.bodyLarge,
   },
   buttonText: {
     ...typography.labelLarge,

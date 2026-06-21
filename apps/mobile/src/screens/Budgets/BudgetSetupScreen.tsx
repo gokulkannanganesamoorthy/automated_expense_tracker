@@ -4,25 +4,42 @@ import { colors, radius, spacing } from '../../theme/tokens';
 import { typography } from '../../theme/typography';
 import { useNavigation } from '@react-navigation/native';
 import { CATEGORY_NAMES } from '@expense-tracker/shared';
+import { useAuthStore } from '../../stores/auth-store';
 
 export function BudgetSetupScreen(): React.ReactElement {
   const navigation = useNavigation();
+  const { settings, updateSettings } = useAuthStore();
 
-  // Mock state
-  const [overallBudget, setOverallBudget] = useState('50000');
-  const [categoryBudgets, setCategoryBudgets] = useState<Record<string, string>>({
-    food: '15000',
-    transport: '8000',
-    shopping: '10000',
-    entertainment: '5000',
-  });
+  const [overallBudget, setOverallBudget] = useState(
+    settings?.monthlyBudgetPaise ? (settings.monthlyBudgetPaise / 100).toString() : ''
+  );
+  
+  // Convert settings categoryBudgets from paise to INR strings for editing
+  const initialCategoryBudgets = Object.fromEntries(
+    Object.entries(settings?.categoryBudgets || {}).map(([k, v]) => [k, (v / 100).toString()])
+  );
+  
+  const [categoryBudgets, setCategoryBudgets] = useState<Record<string, string>>(initialCategoryBudgets);
 
   const handleUpdateCategory = (cat: string, value: string) => {
     setCategoryBudgets(prev => ({ ...prev, [cat]: value }));
   };
 
   const handleSave = () => {
-    // Save to store/DB
+    const monthlyBudgetPaise = overallBudget ? Math.round(parseFloat(overallBudget) * 100) : null;
+    
+    const newCategoryBudgets: Record<string, number> = {};
+    for (const [cat, val] of Object.entries(categoryBudgets)) {
+      if (val && !isNaN(parseFloat(val))) {
+        newCategoryBudgets[cat] = Math.round(parseFloat(val) * 100);
+      }
+    }
+
+    updateSettings({
+      monthlyBudgetPaise,
+      categoryBudgets: newCategoryBudgets,
+    });
+    
     navigation.goBack();
   };
 

@@ -1,5 +1,8 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
+import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+import { auth, db } from '../services/firebase';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import type { UserProfile, UserSettings, UserStats, AuthProvider as AuthProviderType } from '@expense-tracker/shared';
 
 // ═══════════════════════════════════════════════════════════
@@ -58,6 +61,9 @@ interface AuthActions {
   // Loading
   setLoading: (loading: boolean) => void;
   setAuthError: (error: string | null) => void;
+  
+  // Initialization
+  initAuthListener: () => () => void;
 }
 
 type AuthStore = AuthState & AuthActions;
@@ -266,6 +272,72 @@ export const useAuthStore = create<AuthStore>()(
       set((state) => {
         state.authError = error;
       });
+    },
+
+    initAuthListener: () => {
+      const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
+        if (firebaseUser) {
+          // Fetch user profile from Firestore
+          try {
+            const userDocRef = doc(db, 'users', firebaseUser.uid);
+            const userDocSnap = await getDoc(userDocRef);
+            
+            if (userDocSnap.exists()) {
+              const data = userDocSnap.data();
+              // Parse out settings vs profile
+              set((state) => {
+                state.isAuthenticated = true;
+                state.isGuest = false;
+                state.isOnboarded = true;
+                state.user = {
+                  uid: firebaseUser.uid,
+                  name: data.name || firebaseUser.displayName || 'User',
+                  email: firebaseUser.email,
+                  phone: firebaseUser.phoneNumber,
+                  photoUrl: firebaseUser.photoURL,
+                  plan: data.plan || 'free',
+                  trialEndsAt: data.trialEndsAt || null,
+                  authProvider: 'email',
+                  country: data.country || 'IN',
+                  appVersion: data.appVersion || '1.0.0',
+                  deviceCount: data.deviceCount || 1,
+                  createdAt: data.createdAt || new Date().toISOString(),
+                  lastActiveAt: new Date().toISOString(),
+                  isGuest: false,
+                  guestTransactionCount: 0,
+                  guestStartedAt: null,
+                };
+                // Default settings if missing
+                state.settings = data.settings || {
+                  monthlyBudgetPaise: null,
+                  categoryBudgets: {},
+                  currency: 'INR',
+                  notificationPrefs: { transactionAlerts: true, budgetAlerts: true, recurringReminders: true, dailySummary: true, weeklySummary: true, monthlySummary: true, splitReminders: true, systemAlerts: true, largeTransactionThresholdPaise: 500000, dndStartHour: 23, dndEndHour: 7, mutedCategories: [] },
+                  screenshotPrevention: false, biometricEnabled: false, pinEnabled: false, pinHash: null, inactivityTimeoutMinutes: 15, defaultTransactionView: 'list', smsAutoCapture: true, notificationCapture: false, analyticsOptIn: true, theme: 'dark',
+                };
+              });
+            } else {
+              // Document doesn't exist (maybe they just signed up and we haven't created the doc yet, 
+              // but we will create it during the sign up flow in SignInScreen)
+            }
+          } catch (e) {
+            console.error("Error fetching user doc:", e);
+          }
+        } else {
+          // Logged out
+          set((state) => {
+            // Keep guest mode if they were guest?
+            // If they are guest, firebaseUser is null.
+            // So if they are a guest, don't wipe them!
+            if (!state.isGuest) {
+              state.isAuthenticated = false;
+              state.user = null;
+              state.settings = null;
+            }
+          });
+        }
+      });
+      return unsubscribe;
     },
   })),
 );

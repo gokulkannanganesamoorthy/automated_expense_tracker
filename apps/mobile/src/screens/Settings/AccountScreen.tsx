@@ -4,30 +4,33 @@ import { colors, radius, spacing } from '../../theme/tokens';
 import { typography } from '../../theme/typography';
 import { ConfirmationSheet } from '../../components/ConfirmationSheet';
 import { useNavigation } from '@react-navigation/native';
+import { useAuthStore } from '../../stores/auth-store';
 
 export function AccountScreen(): React.ReactElement {
   const navigation = useNavigation<any>();
+  const { user, logout } = useAuthStore();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const handleDeleteAccount = () => {
     setShowDeleteConfirm(false);
-    // 1. Wipe local SQLite DB
-    // 2. Call cloud function to delete Firebase Auth and Firestore data
-    // 3. Navigate to Onboarding
-    console.log('Account deleted');
+    // Real implementation would clear sqlite and delete firebase auth
+    logout();
   };
 
   return (
     <View style={styles.container}>
+      <Pressable style={styles.backButton} onPress={() => navigation.goBack()}>
+        <Text style={styles.backButtonText}>✕ Close</Text>
+      </Pressable>
       <View style={styles.content}>
         <View style={styles.profileSection}>
           <View style={styles.avatar}>
-            <Text style={styles.avatarText}>G</Text>
+            <Text style={styles.avatarText}>{user?.name?.charAt(0) || 'G'}</Text>
           </View>
-          <Text style={styles.name}>Gokul Kannan</Text>
-          <Text style={styles.email}>gokul@example.com</Text>
+          <Text style={styles.name}>{user?.name || 'Guest'}</Text>
+          <Text style={styles.email}>{user?.email || 'Not connected'}</Text>
           <View style={styles.badge}>
-            <Text style={styles.badgeText}>Pro Member</Text>
+            <Text style={styles.badgeText}>{user?.plan === 'pro' ? 'Pro Member' : 'Free Plan'}</Text>
           </View>
         </View>
 
@@ -69,7 +72,17 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: spacing.xl,
+    paddingTop: 0,
     flex: 1,
+  },
+  backButton: {
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.xl,
+    paddingBottom: spacing.md,
+  },
+  backButtonText: {
+    ...typography.bodyLarge,
+    color: colors.primary,
   },
   profileSection: {
     alignItems: 'center',

@@ -1,6 +1,6 @@
 import { initializeApp, getApp, getApps } from 'firebase/app';
 import { getAuth, initializeAuth, getReactNativePersistence } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, initializeFirestore, persistentLocalCache } from 'firebase/firestore';
 import { getRemoteConfig, fetchAndActivate, getAll } from 'firebase/remote-config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
@@ -28,8 +28,10 @@ const auth = initializeAuth(app, {
   persistence: getReactNativePersistence(AsyncStorage)
 });
 
-// Initialize Firestore
-const db = getFirestore(app);
+// Initialize Firestore with offline persistence
+const db = initializeFirestore(app, {
+  localCache: persistentLocalCache()
+});
 
 // Initialize Remote Config
 const remoteConfig = getRemoteConfig(app);

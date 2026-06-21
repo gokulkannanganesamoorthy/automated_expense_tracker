@@ -1,11 +1,18 @@
-import React from 'react';
-import { StyleSheet, View, Text } from 'react-native';
+import React, { useEffect } from 'react';
+import { StyleSheet, View, Text, Pressable } from 'react-native';
+import Animated, { 
+  useSharedValue, 
+  useAnimatedStyle, 
+  withSpring, 
+  withSequence, 
+  withTiming 
+} from 'react-native-reanimated';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import * as Haptics from 'expo-haptics';
 import type { MainTabParamList } from './types';
 import { colors, spacing, radius } from '../theme/tokens';
 import { typography } from '../theme/typography';
 
-// Import screens (will be created in Phase 4)
 import { HomeScreen } from '../screens/Home/HomeScreen';
 import { TransactionsScreen } from '../screens/Transactions/TransactionsScreen';
 import { AnalyticsScreen } from '../screens/Analytics/AnalyticsScreen';
@@ -14,10 +21,6 @@ import { SettingsScreen } from '../screens/Settings/SettingsScreen';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
-// ═══════════════════════════════════════════════════════════
-// TAB ICONS (SVG-free for now, using emoji + styled views)
-// ═══════════════════════════════════════════════════════════
-
 interface TabIconProps {
   focused: boolean;
   icon: string;
@@ -25,13 +28,36 @@ interface TabIconProps {
 }
 
 function TabIcon({ focused, icon, label }: TabIconProps): React.ReactElement {
+  const scale = useSharedValue(1);
+  const translateY = useSharedValue(0);
+
+  useEffect(() => {
+    if (focused) {
+      scale.value = withSequence(
+        withTiming(1.2, { duration: 100 }),
+        withSpring(1, { damping: 10, stiffness: 200 })
+      );
+      translateY.value = withSpring(-4, { damping: 10, stiffness: 200 });
+    } else {
+      scale.value = withSpring(1);
+      translateY.value = withSpring(0);
+    }
+  }, [focused]);
+
+  const animatedIconStyle = useAnimatedStyle(() => ({
+    transform: [
+      { scale: scale.value },
+      { translateY: translateY.value }
+    ],
+  }));
+
   return (
     <View style={styles.tabIconContainer}>
-      <View style={[styles.tabIconWrapper, focused && styles.tabIconWrapperActive]}>
+      <Animated.View style={[styles.tabIconWrapper, focused && styles.tabIconWrapperActive, animatedIconStyle]}>
         <Text style={[styles.tabIconEmoji, focused && styles.tabIconEmojiActive]}>
           {icon}
         </Text>
-      </View>
+      </Animated.View>
       <Text
         style={[
           styles.tabLabel,
@@ -44,10 +70,6 @@ function TabIcon({ focused, icon, label }: TabIconProps): React.ReactElement {
     </View>
   );
 }
-
-// ═══════════════════════════════════════════════════════════
-// TAB NAVIGATOR
-// ═══════════════════════════════════════════════════════════
 
 export function TabNavigator(): React.ReactElement {
   return (
@@ -69,6 +91,9 @@ export function TabNavigator(): React.ReactElement {
           ),
           tabBarAccessibilityLabel: 'Home tab',
         }}
+        listeners={{
+          tabPress: () => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light),
+        }}
       />
       <Tab.Screen
         name="Transactions"
@@ -78,6 +103,9 @@ export function TabNavigator(): React.ReactElement {
             <TabIcon focused={focused} icon="💳" label="Transactions" />
           ),
           tabBarAccessibilityLabel: 'Transactions tab',
+        }}
+        listeners={{
+          tabPress: () => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light),
         }}
       />
       <Tab.Screen
@@ -89,6 +117,9 @@ export function TabNavigator(): React.ReactElement {
           ),
           tabBarAccessibilityLabel: 'Analytics tab',
         }}
+        listeners={{
+          tabPress: () => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light),
+        }}
       />
       <Tab.Screen
         name="Budgets"
@@ -98,6 +129,9 @@ export function TabNavigator(): React.ReactElement {
             <TabIcon focused={focused} icon="🎯" label="Budgets" />
           ),
           tabBarAccessibilityLabel: 'Budgets tab',
+        }}
+        listeners={{
+          tabPress: () => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light),
         }}
       />
       <Tab.Screen
@@ -109,19 +143,18 @@ export function TabNavigator(): React.ReactElement {
           ),
           tabBarAccessibilityLabel: 'Settings tab',
         }}
+        listeners={{
+          tabPress: () => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light),
+        }}
       />
     </Tab.Navigator>
   );
 }
 
-// ═══════════════════════════════════════════════════════════
-// STYLES
-// ═══════════════════════════════════════════════════════════
-
 const styles = StyleSheet.create({
   tabBar: {
-    backgroundColor: colors.tabBarBackground,
-    borderTopColor: colors.tabBarBorder,
+    backgroundColor: colors.surfaceElevated,
+    borderTopColor: colors.border,
     borderTopWidth: 1,
     height: 85,
     paddingBottom: 20,
@@ -152,10 +185,11 @@ const styles = StyleSheet.create({
     opacity: 1,
   },
   tabLabel: {
-    ...typography.labelSmall,
+    ...typography.caption,
     color: colors.textMuted,
   },
   tabLabelActive: {
     color: colors.accentPrimary,
+    fontWeight: '600',
   },
 });

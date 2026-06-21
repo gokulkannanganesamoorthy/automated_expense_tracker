@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
+import { collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { db } from '../services/firebase';
 import type {
   Transaction,
   TransactionFilter,
@@ -47,6 +49,7 @@ interface TransactionActions {
   addTransaction: (transaction: Transaction) => void;
   updateTransaction: (id: string, updates: Partial<Transaction>) => void;
   removeTransaction: (id: string) => void;
+  softDeleteTransaction: (id: string) => void;
   setRecentTransactions: (transactions: Transaction[]) => void;
 
   // Filter/Sort
@@ -75,6 +78,9 @@ interface TransactionActions {
 
   // Review
   setReviewQueueCount: (count: number) => void;
+
+  // Firebase Sync
+  subscribeToTransactions: (uid: string) => () => void;
 }
 
 type TransactionStore = TransactionState & TransactionActions;
@@ -127,44 +133,50 @@ export const useTransactionStore = create<TransactionStore>()(
       });
     },
 
-    addTransaction: (transaction) => {
-      set((state) => {
-        // Add at the beginning (most recent first)
-        state.transactions.unshift(transaction);
-        state.totalCount += 1;
-
-        // Update recent transactions
-        state.recentTransactions = state.transactions.slice(0, 5);
-      });
+    addTransaction: async (transaction) => {
+      // Create a local reference so UI can optimistic update (optional, but handled by snapshot anyway)
+      // We will just push to Firestore directly
+      try {
+        const userUid = useAuthStore?.getState()?.user?.uid;
+        if (!userUid) return;
+        const docRef = doc(db, 'users', userUid, 'transactions', transaction.id);
+        await setDoc(docRef, transaction);
+      } catch (e) {
+        console.error("Error adding transaction", e);
+      }
     },
 
-    updateTransaction: (id, updates) => {
-      set((state) => {
-        const index = state.transactions.findIndex((t) => t.id === id);
-        if (index !== -1) {
-          const txn = state.transactions[index];
-          if (txn) {
-            Object.assign(txn, updates, { updatedAt: new Date().toISOString() });
-          }
-        }
-        // Also update in recent if present
-        const recentIndex = state.recentTransactions.findIndex((t) => t.id === id);
-        if (recentIndex !== -1) {
-          const recentTxn = state.recentTransactions[recentIndex];
-          if (recentTxn) {
-            Object.assign(recentTxn, updates, { updatedAt: new Date().toISOString() });
-          }
-        }
-      });
+    updateTransaction: async (id, updates) => {
+      try {
+        const userUid = useAuthStore?.getState()?.user?.uid;
+        if (!userUid) return;
+        const docRef = doc(db, 'users', userUid, 'transactions', id);
+        await updateDoc(docRef, { ...updates, updatedAt: new Date().toISOString() });
+      } catch (e) {
+        console.error("Error updating transaction", e);
+      }
     },
 
-    removeTransaction: (id) => {
-      set((state) => {
-        state.transactions = state.transactions.filter((t) => t.id !== id);
-        state.recentTransactions = state.recentTransactions.filter((t) => t.id !== id);
-        state.totalCount = Math.max(0, state.totalCount - 1);
-        state.selectedIds.delete(id);
-      });
+    removeTransaction: async (id) => {
+      try {
+        const userUid = useAuthStore?.getState()?.user?.uid;
+        if (!userUid) return;
+        const docRef = doc(db, 'users', userUid, 'transactions', id);
+        await deleteDoc(docRef);
+      } catch (e) {
+        console.error("Error deleting transaction", e);
+      }
+    },
+
+    softDeleteTransaction: async (id) => {
+      try {
+        const userUid = useAuthStore?.getState()?.user?.uid;
+        if (!userUid) return;
+        const docRef = doc(db, 'users', userUid, 'transactions', id);
+        await updateDoc(docRef, { isDeleted: true, updatedAt: new Date().toISOString() });
+      } catch (e) {
+        console.error("Error soft-deleting transaction", e);
+      }
     },
 
     setRecentTransactions: (transactions) => {
@@ -293,8 +305,35 @@ export const useTransactionStore = create<TransactionStore>()(
         state.reviewQueueCount = count;
       });
     },
+
+    subscribeToTransactions: (uid) => {
+      set({ isLoading: true });
+      const q = query(
+        collection(db, 'users', uid, 'transactions'),
+        orderBy('date', 'desc')
+      );
+      
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        const txns = snapshot.docs.map(doc => doc.data() as Transaction);
+        set((state) => {
+          state.transactions = txns;
+          state.totalCount = txns.length;
+          state.recentTransactions = txns.slice(0, 5);
+          state.isLoading = false;
+        });
+      }, (error) => {
+        console.error("Error listening to transactions", error);
+        set({ error: error.message, isLoading: false });
+      });
+
+      return unsubscribe;
+    },
   })),
 );
+
+// We need to import useAuthStore carefully to avoid circular dependencies.
+// It's better to import it inline.
+import { useAuthStore } from './auth-store';
 
 // ═══════════════════════════════════════════════════════════
 // SELECTORS

@@ -20,6 +20,9 @@ export function BankPatternsScreen(): React.ReactElement {
 
   return (
     <View style={styles.container}>
+      <Pressable style={styles.backButton} onPress={() => navigation.goBack()}>
+        <Text style={styles.backButtonText}>✕ Close</Text>
+      </Pressable>
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.header}>
           <View>
@@ -72,7 +75,17 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: spacing.xl,
+    paddingTop: 0,
     paddingBottom: spacing['3xl'],
+  },
+  backButton: {
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.xl,
+    paddingBottom: spacing.md,
+  },
+  backButtonText: {
+    ...typography.bodyLarge,
+    color: colors.primary,
   },
   header: {
     flexDirection: 'row',

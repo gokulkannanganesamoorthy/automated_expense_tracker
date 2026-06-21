@@ -11,7 +11,7 @@ import { colors, radius, spacing } from '../../theme/tokens';
 import { typography } from '../../theme/typography';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { RootStackParamList } from '../../navigation/types';
+import type { OnboardingStackParamList } from '../../navigation/types';
 
 const { width, height } = Dimensions.get('window');
 
@@ -37,7 +37,7 @@ const SLIDES = [
 ];
 
 export function ValuePropScreen(): React.ReactElement {
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const navigation = useNavigation<NativeStackNavigationProp<OnboardingStackParamList>>();
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollX = useSharedValue(0);
   const flatListRef = useRef<FlatList>(null);

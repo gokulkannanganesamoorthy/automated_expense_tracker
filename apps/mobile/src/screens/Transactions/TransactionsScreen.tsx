@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { View, StyleSheet, Text, Pressable } from 'react-native';
+import Animated, { FadeInDown, FadeInRight, Layout } from 'react-native-reanimated';
 import { FlashList } from '@shopify/flash-list';
 import { colors, radius, spacing } from '../../theme/tokens';
 import { typography } from '../../theme/typography';
@@ -10,41 +11,75 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../../navigation/types';
 
+type FilterType = 'all' | 'debit' | 'credit';
+
 export function TransactionsScreen(): React.ReactElement {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { transactions, fetchTransactions, isLoading } = useTransactionStore();
-  const [filter, setFilter] = useState<'all' | 'debit' | 'credit'>('all');
+  const { transactions, isLoading } = useTransactionStore();
+  const [filter, setFilter] = useState<FilterType>('all');
 
   const filteredTransactions = useMemo(() => {
-    if (filter === 'all') return transactions;
-    return transactions.filter(t => t.type === filter);
+    const filtered = filter === 'all' 
+      ? transactions.filter(t => !t.isDeleted) 
+      : transactions.filter(t => t.type === filter && !t.isDeleted);
+    return filtered;
   }, [transactions, filter]);
 
+  // Summary stats
+  const totalSpent = useMemo(() => 
+    transactions.filter(t => t.type === 'debit' && !t.isDeleted)
+      .reduce((s, t) => s + t.amountPaise, 0), 
+    [transactions]
+  );
+  const totalReceived = useMemo(() => 
+    transactions.filter(t => t.type === 'credit' && !t.isDeleted)
+      .reduce((s, t) => s + t.amountPaise, 0), 
+    [transactions]
+  );
+
   const handleTransactionPress = (transaction: any) => {
-    // navigation.navigate('TransactionDetail', { id: transaction.id });
+    navigation.navigate('TransactionDetail', { transactionId: transaction.id });
   };
 
   const renderHeader = () => (
-    <View style={styles.header}>
-      <Text style={styles.title}>Transactions</Text>
-      <View style={styles.filterContainer}>
-        <FilterChip 
-          label="All" 
-          active={filter === 'all'} 
-          onPress={() => setFilter('all')} 
-        />
-        <FilterChip 
-          label="Spent" 
-          active={filter === 'debit'} 
-          onPress={() => setFilter('debit')} 
-        />
-        <FilterChip 
-          label="Received" 
-          active={filter === 'credit'} 
-          onPress={() => setFilter('credit')} 
-        />
+    <Animated.View entering={FadeInDown.duration(500)}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Transactions</Text>
+        <Text style={styles.subtitle}>
+          {filteredTransactions.length} transaction{filteredTransactions.length !== 1 ? 's' : ''}
+        </Text>
       </View>
-    </View>
+
+      {/* Summary Cards */}
+      <View style={styles.summaryRow}>
+        <Animated.View entering={FadeInDown.duration(500).delay(100)} style={styles.summaryCard}>
+          <Text style={styles.summaryLabel}>Total Spent</Text>
+          <Text style={[styles.summaryValue, { color: colors.debit }]}>
+            {'\u20B9'}{(totalSpent / 100).toLocaleString('en-IN')}
+          </Text>
+        </Animated.View>
+        <Animated.View entering={FadeInDown.duration(500).delay(200)} style={styles.summaryCard}>
+          <Text style={styles.summaryLabel}>Total Received</Text>
+          <Text style={[styles.summaryValue, { color: colors.credit }]}>
+            {'\u20B9'}{(totalReceived / 100).toLocaleString('en-IN')}
+          </Text>
+        </Animated.View>
+      </View>
+
+      {/* Filter Chips */}
+      <View style={styles.filterContainer}>
+        {(['all', 'debit', 'credit'] as FilterType[]).map((f, i) => (
+          <Animated.View key={f} entering={FadeInRight.duration(400).delay(100 + i * 80)}>
+            <FilterChip 
+              label={f === 'all' ? 'All' : f === 'debit' ? 'Spent' : 'Received'} 
+              active={filter === f} 
+              onPress={() => setFilter(f)} 
+              color={f === 'debit' ? colors.debit : f === 'credit' ? colors.credit : undefined}
+            />
+          </Animated.View>
+        ))}
+      </View>
+    </Animated.View>
   );
 
   return (
@@ -52,11 +87,13 @@ export function TransactionsScreen(): React.ReactElement {
       <FlashList
         data={filteredTransactions}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <TransactionCard 
-            transaction={item} 
-            onPress={handleTransactionPress} 
-          />
+        renderItem={({ item, index }) => (
+          <Animated.View entering={FadeInDown.duration(350).delay(Math.min(index * 50, 500))}>
+            <TransactionCard 
+              transaction={item} 
+              onPress={handleTransactionPress} 
+            />
+          </Animated.View>
         )}
         estimatedItemSize={76}
         ListHeaderComponent={renderHeader}
@@ -64,24 +101,30 @@ export function TransactionsScreen(): React.ReactElement {
           !isLoading ? (
             <EmptyState 
               title="No transactions found" 
-              description={filter === 'all' ? "You don't have any transactions yet." : `No ${filter}s found.`} 
+              description={filter === 'all' ? "You don't have any transactions yet. Tap the + button on the Home tab to add one." : `No ${filter === 'debit' ? 'expenses' : 'income'} found.`} 
             />
           ) : null
         }
         contentContainerStyle={styles.listContent}
-        onRefresh={() => fetchTransactions()}
-        refreshing={isLoading}
       />
     </View>
   );
 }
 
-const FilterChip = ({ label, active, onPress }: { label: string, active: boolean, onPress: () => void }) => (
+const FilterChip = ({ label, active, onPress, color }: { label: string, active: boolean, onPress: () => void, color?: string }) => (
   <Pressable 
-    style={[styles.chip, active && styles.chipActive]} 
+    style={[
+      styles.chip, 
+      active && styles.chipActive,
+      active && color ? { backgroundColor: color + '20', borderColor: color } : null,
+    ]} 
     onPress={onPress}
   >
-    <Text style={[styles.chipText, active && styles.chipTextActive]}>
+    <Text style={[
+      styles.chipText, 
+      active && styles.chipTextActive,
+      active && color ? { color } : null,
+    ]}>
       {label}
     </Text>
   </Pressable>
@@ -97,17 +140,46 @@ const styles = StyleSheet.create({
     paddingBottom: spacing['3xl'],
   },
   header: {
-    paddingVertical: spacing.lg,
-    paddingBottom: spacing.xl,
+    paddingTop: spacing.xl,
+    paddingBottom: spacing.md,
   },
   title: {
     ...typography.h1,
     color: colors.textPrimary,
-    marginBottom: spacing.md,
+    marginBottom: 4,
+  },
+  subtitle: {
+    ...typography.bodyMedium,
+    color: colors.textMuted,
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginBottom: spacing.lg,
+  },
+  summaryCard: {
+    flex: 1,
+    backgroundColor: colors.surface,
+    borderRadius: radius.xl,
+    padding: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  summaryLabel: {
+    ...typography.caption,
+    color: colors.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginBottom: 4,
+  },
+  summaryValue: {
+    ...typography.h3,
+    fontWeight: '700',
   },
   filterContainer: {
     flexDirection: 'row',
     gap: spacing.sm,
+    marginBottom: spacing.lg,
   },
   chip: {
     paddingHorizontal: spacing.md,
@@ -118,7 +190,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   chipActive: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.accentSubtle,
     borderColor: colors.primary,
   },
   chipText: {
@@ -126,6 +198,7 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   chipTextActive: {
-    color: colors.textInverse,
+    color: colors.primary,
+    fontWeight: '600',
   },
 });

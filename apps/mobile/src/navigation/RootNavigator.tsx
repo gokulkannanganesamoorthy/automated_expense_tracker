@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
@@ -24,13 +24,14 @@ const BiometricLockScreen = PlaceholderScreen;
 const PINScreen = PlaceholderScreen;
 
 // Onboarding
-const OnboardingNavigator = PlaceholderScreen;
+import { OnboardingNavigator } from './OnboardingNavigator';
 
 // Modal Screens
 import { TransactionDetailScreen } from '../screens/Transactions/TransactionDetailScreen';
 import { ManualEntryScreen } from '../screens/Transactions/ManualEntryScreen';
 const DeleteAccountScreen = PlaceholderScreen;
-const ProfileScreen = PlaceholderScreen;
+import { AccountScreen } from '../screens/Settings/AccountScreen';
+import { BankPatternsScreen } from '../screens/Settings/BankPatternsScreen';
 const SecuritySettingsScreen = PlaceholderScreen;
 const NotificationPrefsScreen = PlaceholderScreen;
 import { ExportScreen } from '../screens/Settings/ExportScreen';
@@ -48,6 +49,7 @@ const ImportDataScreen = PlaceholderScreen;
 
 // Hooks
 import { useAuthStore } from '../stores/auth-store';
+import { useTransactionStore } from '../stores/transaction-store';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -78,7 +80,21 @@ const navigationTheme = {
 // ═══════════════════════════════════════════════════════════
 
 export function RootNavigator(): React.ReactElement {
-  const { isAuthenticated, isOnboarded, isLocked } = useAuthStore();
+  const { isAuthenticated, isOnboarded, isLocked, user } = useAuthStore();
+  
+  useEffect(() => {
+    let unsubscribe: (() => void) | undefined;
+    
+    if (isAuthenticated && isOnboarded && user?.uid && !user.isGuest) {
+      unsubscribe = useTransactionStore.getState().subscribeToTransactions(user.uid);
+    }
+    
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
+  }, [isAuthenticated, isOnboarded, user?.uid, user?.isGuest]);
 
   return (
     <NavigationContainer theme={navigationTheme}>
@@ -148,7 +164,8 @@ export function RootNavigator(): React.ReactElement {
               }}
             >
               <Stack.Screen name="DeleteAccount" component={DeleteAccountScreen} />
-              <Stack.Screen name="Profile" component={ProfileScreen} />
+              <Stack.Screen name="Profile" component={AccountScreen} />
+              <Stack.Screen name="BankPatterns" component={BankPatternsScreen} />
               <Stack.Screen name="SecuritySettings" component={SecuritySettingsScreen} />
               <Stack.Screen name="NotificationPrefs" component={NotificationPrefsScreen} />
               <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />

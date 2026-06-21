@@ -3,8 +3,10 @@ import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { colors, radius, spacing } from '../../theme/tokens';
 import { typography } from '../../theme/typography';
 import { ExportProgress, ExportStatus } from '../../components/ExportProgress';
+import { useNavigation } from '@react-navigation/native';
 
 export function ExportScreen(): React.ReactElement {
+  const navigation = useNavigation();
   const [exportType, setExportType] = useState<'csv' | 'pdf'>('csv');
   const [status, setStatus] = useState<ExportStatus>('idle');
   const [progress, setProgress] = useState(0);
@@ -44,8 +46,13 @@ export function ExportScreen(): React.ReactElement {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Export Data</Text>
-      <Text style={styles.subtitle}>Download your transactions for your records or tax purposes.</Text>
+      <Pressable style={styles.backButton} onPress={() => navigation.goBack()}>
+        <Text style={styles.backButtonText}>✕ Close</Text>
+      </Pressable>
+      
+      <View style={styles.content}>
+        <Text style={styles.title}>Export Data</Text>
+        <Text style={styles.subtitle}>Download your transactions for your records or tax purposes.</Text>
 
       <View style={styles.typeSelector}>
         <Pressable 
@@ -77,7 +84,8 @@ export function ExportScreen(): React.ReactElement {
         <Pressable style={styles.exportButton} onPress={handleExport}>
           <Text style={styles.exportButtonText}>Export {exportType.toUpperCase()}</Text>
         </Pressable>
-      )}
+        )}
+      </View>
     </View>
   );
 }
@@ -86,7 +94,20 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  content: {
     padding: spacing.xl,
+    paddingTop: 0,
+    flex: 1,
+  },
+  backButton: {
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.xl,
+    paddingBottom: spacing.md,
+  },
+  backButtonText: {
+    ...typography.bodyLarge,
+    color: colors.primary,
   },
   title: {
     ...typography.h2,

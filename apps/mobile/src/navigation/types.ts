@@ -41,6 +41,7 @@ export type RootStackParamList = {
   ImportData: undefined;
   DeleteAccount: undefined;
   Profile: undefined;
+  BankPatterns: undefined;
   SecuritySettings: undefined;
   NotificationPrefs: undefined;
   PrivacyPolicy: undefined;
@@ -70,11 +71,8 @@ export type MainTabParamList = {
 
 export type OnboardingStackParamList = {
   ValueProp: undefined;
-  SignInChoice: undefined;
-  PermissionsSetup: undefined; // SMS (Android) / Email (iOS)
-  NotificationsSetup: undefined;
-  BudgetOnboarding: undefined;
-  RestoreData: { uid: string }; // Returning user restore
+  SignIn: undefined;
+  Permissions: { provider: string };
 };
 
 // ═══════════════════════════════════════════════════════════

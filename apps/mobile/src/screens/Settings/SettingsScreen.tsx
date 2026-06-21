@@ -5,14 +5,17 @@ import { typography } from '../../theme/typography';
 import { useNavigation } from '@react-navigation/native';
 import { ConfirmationSheet } from '../../components/ConfirmationSheet';
 import * as LocalAuthentication from 'expo-local-authentication';
+import { useAuthStore } from '../../stores/auth-store';
+import { authService } from '../../services/auth';
 
 export function SettingsScreen(): React.ReactElement {
   const navigation = useNavigation<any>();
+  const { settings, updateSettings, logout } = useAuthStore();
   
-  // Mock settings state
-  const [biometricsEnabled, setBiometricsEnabled] = useState(false);
-  const [syncEnabled, setSyncEnabled] = useState(true);
-  const [darkMode, setDarkMode] = useState(false);
+  const biometricsEnabled = settings?.biometricEnabled || false;
+  const syncEnabled = settings?.analyticsOptIn || false; // Using analyticsOptIn to mock sync toggle
+  const darkMode = settings?.theme === 'dark';
+  
   const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
 
   const toggleBiometrics = async (value: boolean) => {
@@ -25,19 +28,24 @@ export function SettingsScreen(): React.ReactElement {
           promptMessage: 'Enable Biometric Unlock',
         });
         if (result.success) {
-          setBiometricsEnabled(true);
+          updateSettings({ biometricEnabled: true });
         }
       } else {
         alert("Biometrics not available or enrolled on this device.");
       }
     } else {
-      setBiometricsEnabled(false);
+      updateSettings({ biometricEnabled: false });
     }
   };
 
-  const handleSignOut = () => {
+  const handleSignOut = async () => {
     setShowSignOutConfirm(false);
-    // authStore.signOut() -> navigate to Onboarding
+    try {
+      await authService.signOutUser();
+    } catch (e) {
+      console.error('Firebase sign out failed:', e);
+    }
+    logout();
   };
 
   return (
@@ -50,7 +58,7 @@ export function SettingsScreen(): React.ReactElement {
           <SettingsRow 
             icon="👤" 
             label="Account Details" 
-            onPress={() => navigation.navigate('Account')} 
+            onPress={() => navigation.navigate('Profile')} 
           />
           <SettingsRow 
             icon="☁️" 
@@ -58,7 +66,7 @@ export function SettingsScreen(): React.ReactElement {
             rightContent={
               <Switch 
                 value={syncEnabled} 
-                onValueChange={setSyncEnabled} 
+                onValueChange={(val) => updateSettings({ analyticsOptIn: val })} 
                 trackColor={{ true: colors.primary }}
               />
             } 
@@ -66,7 +74,7 @@ export function SettingsScreen(): React.ReactElement {
           <SettingsRow 
             icon="📤" 
             label="Export Data (CSV/PDF)" 
-            onPress={() => navigation.navigate('Export')} 
+            onPress={() => navigation.navigate('ExportOptions')} 
           />
         </View>
 
@@ -89,7 +97,7 @@ export function SettingsScreen(): React.ReactElement {
             rightContent={
               <Switch 
                 value={darkMode} 
-                onValueChange={setDarkMode} 
+                onValueChange={(val) => updateSettings({ theme: val ? 'dark' : 'light' })} 
                 trackColor={{ true: colors.primary }}
               />
             } 

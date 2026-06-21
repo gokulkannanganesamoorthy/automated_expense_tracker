@@ -2,23 +2,32 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, Pressable, Platform } from 'react-native';
 import { colors, radius, spacing } from '../../theme/tokens';
 import { typography } from '../../theme/typography';
-import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { RootStackParamList } from '../../navigation/types';
+import { useAuthStore } from '../../stores/auth-store';
 import * as Notifications from 'expo-notifications';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { Alert } from 'react-native';
 
 export function PermissionsScreen(): React.ReactElement {
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const navigation = useNavigation();
+  const route = useRoute<any>();
+  const provider = route.params?.provider || 'guest';
   const [status, setStatus] = useState<'idle' | 'requesting' | 'granted' | 'denied'>('idle');
+
+  const handleFinalAuthStep = () => {
+    if (provider === 'guest') {
+      useAuthStore.getState().setGuestMode();
+    } else {
+      // Real user auth state is already hydrated by onAuthStateChanged in App.tsx!
+      useAuthStore.getState().setOnboarded(true);
+    }
+  };
 
   const handleRequestPermissions = async () => {
     setStatus('requesting');
     
     try {
       if (Platform.OS === 'android') {
-        // In a real implementation with `react-native-get-sms-android`, 
-        // we would request READ_SMS and RECEIVE_SMS permissions here via PermissionsAndroid.
-        // For Expo Go fallback, we request Notification permission to read bank push notifications.
+        Alert.alert("Notice", "Android SMS permissions (READ_SMS) require native configuration and cannot be fully requested in Expo Go. We will fallback to Notification permissions for this demo.");
       }
       
       const { status: existingStatus } = await Notifications.getPermissionsAsync();
@@ -32,23 +41,29 @@ export function PermissionsScreen(): React.ReactElement {
       if (finalStatus === 'granted') {
         setStatus('granted');
         setTimeout(() => {
-          navigation.navigate('MainTabs', { screen: 'Home' }); // Or BudgetSetup screen
+          handleFinalAuthStep();
         }, 1000);
       } else {
         setStatus('denied');
+        Alert.alert("Permission Denied", "You can manually enable notifications in your device settings later.");
       }
     } catch (error) {
       console.error('Permission request failed:', error);
       setStatus('denied');
+      Alert.alert("Error", "Permission request failed on this simulator/device.");
     }
   };
 
   const handleSkip = () => {
-    navigation.navigate('MainTabs', { screen: 'Home' });
+    handleFinalAuthStep();
   };
 
   return (
     <View style={styles.container}>
+      <Pressable style={styles.backButton} onPress={() => navigation.goBack()}>
+        <Text style={styles.backButtonText}>← Back</Text>
+      </Pressable>
+
       <View style={styles.content}>
         <View style={styles.iconContainer}>
           <Text style={styles.icon}>{Platform.OS === 'android' ? '📩' : '🔔'}</Text>
@@ -103,6 +118,18 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
     padding: spacing['2xl'],
+    paddingTop: spacing['3xl'],
+  },
+  backButton: {
+    position: 'absolute',
+    top: spacing['3xl'],
+    left: spacing['xl'],
+    zIndex: 10,
+    padding: spacing.sm,
+  },
+  backButtonText: {
+    ...typography.bodyLarge,
+    color: colors.primary,
   },
   content: {
     flex: 1,

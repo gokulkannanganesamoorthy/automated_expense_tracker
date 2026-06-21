@@ -12,7 +12,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 export function TransactionDetailScreen(): React.ReactElement {
   const navigation = useNavigation();
   const route = useRoute<any>();
-  const txnId = route.params?.id;
+  const txnId = route.params?.transactionId;
 
   const { transactions, updateTransaction, softDeleteTransaction } = useTransactionStore();
   const transaction = transactions.find(t => t.id === txnId);
