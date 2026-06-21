@@ -17,35 +17,81 @@ const firebaseConfig = {
 
 // Initialize Firebase App
 let app;
+let auth;
+let db;
+
 if (!getApps().length) {
   app = initializeApp(firebaseConfig);
+  auth = initializeAuth(app, {
+    persistence: getReactNativePersistence(AsyncStorage)
+  });
+  db = initializeFirestore(app, {
+    localCache: persistentLocalCache()
+  });
 } else {
   app = getApp();
+  try {
+    auth = getAuth(app);
+  } catch (e) {
+    auth = initializeAuth(app, {
+      persistence: getReactNativePersistence(AsyncStorage)
+    });
+  }
+  try {
+    db = getFirestore(app);
+  } catch (e) {
+    db = initializeFirestore(app, {
+      localCache: persistentLocalCache()
+    });
+  }
 }
 
-// Initialize Auth with AsyncStorage for React Native persistence
-const auth = initializeAuth(app, {
-  persistence: getReactNativePersistence(AsyncStorage)
-});
+// Initialize Remote Config with a graceful fallback for environments where IndexedDB is unavailable (like Hermes/React Native)
+let remoteConfig: any = null;
+let useMockRemoteConfig = false;
 
-// Initialize Firestore with offline persistence
-const db = initializeFirestore(app, {
-  localCache: persistentLocalCache()
-});
+const DEFAULT_BANK_PATTERNS = [
+  { bank: 'HDFC', type: 'debit', pattern: '(?i)debited.*?rs\\.?\\s*(?<amount>[\\d,]+\\.?\\d*).*?a/c\\s*(?<account>\\d+)' },
+  { bank: 'HDFC', type: 'credit', pattern: '(?i)credited.*?rs\\.?\\s*(?<amount>[\\d,]+\\.?\\d*).*?a/c\\s*(?<account>\\d+)' },
+  { bank: 'SBI', type: 'debit', pattern: '(?i)debited.*?inr\\s*(?<amount>[\\d,]+\\.?\\d*).*?a/c\\s*(?<account>\\d+)' },
+  { bank: 'SBI', type: 'credit', pattern: '(?i)credited.*?inr\\s*(?<amount>[\\d,]+\\.?\\d*).*?a/c\\s*(?<account>\\d+)' },
+  { bank: 'ICICI', type: 'debit', pattern: '(?i)acct\\s*(?<account>\\w+).*?debited.*?inr\\s*(?<amount>[\\d,]+\\.?\\d*)' },
+  { bank: 'ICICI', type: 'credit', pattern: '(?i)acct\\s*(?<account>\\w+).*?credited.*?inr\\s*(?<amount>[\\d,]+\\.?\\d*)' }
+];
 
-// Initialize Remote Config
-const remoteConfig = getRemoteConfig(app);
-remoteConfig.settings.minimumFetchIntervalMillis = 3600000; // 1 hour in prod
-// Set sensible defaults for parser logic before fetch
-remoteConfig.defaultConfig = {
-  bank_patterns: JSON.stringify([
-    { bank: 'HDFC', type: 'debit', pattern: '(?i)debited.*?rs\\.?\\s*(?<amount>[\\d,]+\\.?\\d*).*?a/c\\s*(?<account>\\d+)' },
-    { bank: 'HDFC', type: 'credit', pattern: '(?i)credited.*?rs\\.?\\s*(?<amount>[\\d,]+\\.?\\d*).*?a/c\\s*(?<account>\\d+)' },
-    { bank: 'SBI', type: 'debit', pattern: '(?i)debited.*?inr\\s*(?<amount>[\\d,]+\\.?\\d*).*?a/c\\s*(?<account>\\d+)' },
-    { bank: 'SBI', type: 'credit', pattern: '(?i)credited.*?inr\\s*(?<amount>[\\d,]+\\.?\\d*).*?a/c\\s*(?<account>\\d+)' },
-    { bank: 'ICICI', type: 'debit', pattern: '(?i)acct\\s*(?<account>\\w+).*?debited.*?inr\\s*(?<amount>[\\d,]+\\.?\\d*)' },
-    { bank: 'ICICI', type: 'credit', pattern: '(?i)acct\\s*(?<account>\\w+).*?credited.*?inr\\s*(?<amount>[\\d,]+\\.?\\d*)' }
-  ])
+try {
+  remoteConfig = getRemoteConfig(app);
+  remoteConfig.settings.minimumFetchIntervalMillis = 3600000; // 1 hour in prod
+  remoteConfig.defaultConfig = {
+    bank_patterns: JSON.stringify(DEFAULT_BANK_PATTERNS)
+  };
+} catch (e) {
+  console.warn('[RemoteConfig] Remote config is not supported in this environment, using local fallbacks:', e);
+  useMockRemoteConfig = true;
+  remoteConfig = {
+    _isMock: true,
+    defaultConfig: {
+      bank_patterns: JSON.stringify(DEFAULT_BANK_PATTERNS)
+    }
+  };
+}
+
+const customFetchAndActivate = async (rc: any) => {
+  if (rc?._isMock) {
+    return false;
+  }
+  return fetchAndActivate(rc);
 };
 
-export { app, auth, db, remoteConfig, fetchAndActivate, getAll };
+const customGetAll = (rc: any) => {
+  if (rc?._isMock) {
+    return {
+      bank_patterns: {
+        asString: () => rc.defaultConfig.bank_patterns
+      }
+    };
+  }
+  return getAll(rc);
+};
+
+export { app, auth, db, remoteConfig, customFetchAndActivate as fetchAndActivate, customGetAll as getAll };
